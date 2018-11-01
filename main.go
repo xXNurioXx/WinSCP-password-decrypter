@@ -9,6 +9,7 @@ import (
 	"strings"
 	"os/user"
 	"log"
+	"net/url"
 )
 
 const (
@@ -63,7 +64,8 @@ func decryptIni(filepath string) {
 
 	for _, c := range cfg.Sections() {
 		if c.HasKey("Password") {
-			fmt.Printf("%s\n", strings.TrimPrefix(c.Name(), "sessions\\"));
+			name,_ := url.PathUnescape(strings.TrimPrefix(c.Name(), "sessions\\"))
+			fmt.Printf("%s\n", name);
 			fmt.Printf("  Hostname: %s\n", c.Key("HostName").Value())
 			fmt.Printf("  Username: %s\n", c.Key("UserName").Value())
 			fmt.Printf("  Password: %s\n", decrypt(c.Key("HostName").Value(), c.Key("UserName").Value(), c.Key("Password").Value()));
