@@ -85,16 +85,16 @@ func decrypt(host, username, password string) string {
 		passbytes = append(passbytes, byte(val))
 	}
 	var flag byte
-	flag, passbytes = dec_next_char(passbytes)
+	flag, passbytes = decryptNextCharacter(passbytes)
 	var length byte = 0
 	if flag == PasswordFlag {
-		_, passbytes = dec_next_char(passbytes)
+		_, passbytes = decryptNextCharacter(passbytes)
 
-		length, passbytes = dec_next_char(passbytes)
+		length, passbytes = decryptNextCharacter(passbytes)
 	} else {
 		length = flag
 	}
-	toBeDeleted, passbytes := dec_next_char(passbytes)
+	toBeDeleted, passbytes := decryptNextCharacter(passbytes)
 	passbytes = passbytes[toBeDeleted*2:]
 
 	clearpass := ""
@@ -103,7 +103,7 @@ func decrypt(host, username, password string) string {
 		val byte
 	)
 	for i = 0; i < length; i++ {
-		val, passbytes = dec_next_char(passbytes)
+		val, passbytes = decryptNextCharacter(passbytes)
 		clearpass += string(val)
 	}
 
@@ -113,7 +113,7 @@ func decrypt(host, username, password string) string {
 	return clearpass
 }
 
-func dec_next_char(passbytes []byte) (byte, []byte) {
+func decryptNextCharacter(passbytes []byte) (byte, []byte) {
 	if len(passbytes) <= 0 {
 		return 0, passbytes
 	}
