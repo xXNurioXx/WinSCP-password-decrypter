@@ -29,14 +29,19 @@ func main() {
 	}
 
 	if args[0] == "ini" {
+		// In case 'ini' argument was provided,
+		// start the decryption of ini file.
+		var iniPath string
 		if len(args) == 2 {
-			decryptIni(args[1])
+			iniPath = args[1]
 		} else {
-			decryptIni(defaultWinSCPIniFilePath())
+			iniPath = defaultWinSCPIniFilePath()
 		}
-	} else {
-		fmt.Println(decrypt(args[0], args[1], args[2]))
+		decryptIni(iniPath)
+		return
 	}
+
+	fmt.Println(decrypt(args[0], args[1], args[2]))
 }
 
 func printHelp() {
