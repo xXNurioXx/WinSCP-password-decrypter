@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/go-ini/ini"
+	"gopkg.in/ini.v1"
 )
 
 // WinSCP password encryption/decryption salts.
