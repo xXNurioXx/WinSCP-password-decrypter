@@ -83,6 +83,7 @@ func decryptIni(filepath string) {
 		panic(err)
 	}
 
+	// Print every entry of the configuration that has password field.
 	for _, c := range cfg.Sections() {
 		if c.HasKey("Password") {
 			name, _ := url.PathUnescape(strings.TrimPrefix(c.Name(), "sessions\\"))
@@ -97,36 +98,44 @@ func decryptIni(filepath string) {
 }
 
 func decrypt(host, username, password string) string {
-	key := username + host
+	// Build 'passbytes' variable
 	passbytes := []byte{}
 	for i := 0; i < len(password); i++ {
 		val, _ := strconv.ParseInt(string(password[i]), 16, 8)
 		passbytes = append(passbytes, byte(val))
 	}
-	var flag byte
-	flag, passbytes = decryptNextCharacter(passbytes)
-	var length byte = 0
-	if flag == PasswordFlag {
-		_, passbytes = decryptNextCharacter(passbytes)
 
-		length, passbytes = decryptNextCharacter(passbytes)
+	// Build 'flag' variable
+	var flag byte
+	flag, passbytes = decryptNextCharacter(passbytes) // decryptNextCharacter alters the passbytes variable to remove already parsed characters.
+
+	// Build 'length' variable
+	var cryptedPasswordlength byte = 0
+	if flag == PasswordFlag {
+		_, passbytes = decryptNextCharacter(passbytes)                     // Ignore two characters of the passbytes.
+		cryptedPasswordlength, passbytes = decryptNextCharacter(passbytes) // decryptNextCharacter alters the passbytes variable to remove already parsed characters.
 	} else {
-		length = flag
+		cryptedPasswordlength = flag
 	}
-	toBeDeleted, passbytes := decryptNextCharacter(passbytes)
+	toBeDeleted, passbytes := decryptNextCharacter(passbytes) // decryptNextCharacter alters the passbytes variable to remove already parsed characters.
 	passbytes = passbytes[toBeDeleted*2:]
 
+	// Build 'clearpass' variable
 	clearpass := ""
 	var (
 		i   byte
 		val byte
 	)
-	for i = 0; i < length; i++ {
-		val, passbytes = decryptNextCharacter(passbytes)
-		clearpass += string(val)
+	for i = 0; i < cryptedPasswordlength; i++ {
+		val, passbytes = decryptNextCharacter(passbytes) // decryptNextCharacter alters the passbytes variable to remove already parsed characters.
+		clearpass += string(val)                         // Add decrypted character to the result variable.
 	}
 
+	// Apply correction to the 'clearpass' variable.
 	if flag == PasswordFlag {
+		// The clearpass will contians the username, host and password.
+		// Substring username and host from the result password.
+		key := username + host
 		clearpass = clearpass[len(key):]
 	}
 	return clearpass
@@ -139,8 +148,8 @@ func decryptNextCharacter(passbytes []byte) (byte, []byte) {
 		return 0, passbytes
 	}
 
-	a := passbytes[0]
-	b := passbytes[1]
-	passbytes = passbytes[2:]
+	a := passbytes[0]         // Obtain first character to parse.
+	b := passbytes[1]         // Obtain second character to parse.
+	passbytes = passbytes[2:] // Remove already parsed characters.
 	return ^(((a << 4) + b) ^ PasswordMagic) & PasswordFlag, passbytes
 }
