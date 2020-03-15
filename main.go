@@ -22,23 +22,12 @@ const (
 func main() {
 	args := os.Args[1:]
 	if len(args) != 3 && len(args) != 2 {
-		fmt.Println("WinSCP stored password finder")
-		fmt.Println("Registry:")
-		fmt.Println("  Open regedit and navigate to [HKEY_CURRENT_USER\\Software\\Martin Prikryl\\WinSCP 2\\Sessions] to get the hostname, username and encrypted password")
-		if runtime.GOOS == "windows" {
-			fmt.Println("  Usage winscppasswd.exe <host> <username> <encrypted_password>")
-		} else {
-			fmt.Println("  Usage ./winscppasswd <host> <username> <encrypted_password>")
-		}
-		fmt.Println("\n\nWinSCP.ini:")
-		if runtime.GOOS == "windows" {
-			fmt.Println("  Usage winscppasswd.exe ini [<filepath>]")
-		} else {
-			fmt.Println("  Usage ./winscppasswd ini [<filepath>]")
-		}
-		fmt.Printf("  Default value <filepath>: %s\n", defaultWinSCPIniFilePath())
+		// In case provided arguments doesn't match the
+		// application usage, print application usage message.
+		printHelp()
 		return
 	}
+
 	if args[0] == "ini" {
 		if len(args) == 2 {
 			decryptIni(args[1])
@@ -48,6 +37,25 @@ func main() {
 	} else {
 		fmt.Println(decrypt(args[0], args[1], args[2]))
 	}
+}
+
+func printHelp() {
+	fmt.Println("WinSCP stored password finder")
+	fmt.Println("Registry:")
+	fmt.Println("  Open regedit and navigate to [HKEY_CURRENT_USER\\Software\\Martin Prikryl\\WinSCP 2\\Sessions] to get the hostname, username and encrypted password")
+	if runtime.GOOS == "windows" {
+		fmt.Println("  Usage winscppasswd.exe <host> <username> <encrypted_password>")
+	} else {
+		fmt.Println("  Usage ./winscppasswd <host> <username> <encrypted_password>")
+	}
+	fmt.Println("\n\nWinSCP.ini:")
+	if runtime.GOOS == "windows" {
+		fmt.Println("  Usage winscppasswd.exe ini [<filepath>]")
+	} else {
+		fmt.Println("  Usage ./winscppasswd ini [<filepath>]")
+	}
+	fmt.Printf("  Default value <filepath>: %s\n", defaultWinSCPIniFilePath())
+	return
 }
 
 func defaultWinSCPIniFilePath() string {
