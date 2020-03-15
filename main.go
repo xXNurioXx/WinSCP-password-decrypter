@@ -115,8 +115,11 @@ func decrypt(host, username, password string) string {
 
 func decryptNextCharacter(passbytes []byte) (byte, []byte) {
 	if len(passbytes) <= 0 {
+		// In case passbytes param was empty,
+		// stop the flow here returning '0'.
 		return 0, passbytes
 	}
+
 	a := passbytes[0]
 	b := passbytes[1]
 	passbytes = passbytes[2:]
