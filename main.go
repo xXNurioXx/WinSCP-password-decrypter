@@ -41,6 +41,8 @@ func main() {
 		return
 	}
 
+	// In case any argument matches a different operation,
+	// perform the default decryption operation.
 	fmt.Println(decrypt(args[0], args[1], args[2]))
 }
 
