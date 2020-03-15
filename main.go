@@ -48,6 +48,8 @@ func main() {
 
 func printHelp() {
 	fmt.Println("WinSCP stored password finder")
+
+	// WinSCP's password manual decryption mode.
 	fmt.Println("Registry:")
 	fmt.Println("  Open regedit and navigate to [HKEY_CURRENT_USER\\Software\\Martin Prikryl\\WinSCP 2\\Sessions] to get the hostname, username and encrypted password")
 	if runtime.GOOS == "windows" {
@@ -55,6 +57,8 @@ func printHelp() {
 	} else {
 		fmt.Println("  Usage ./winscppasswd <host> <username> <encrypted_password>")
 	}
+
+	// WinSCP's ini file mode.
 	fmt.Println("\n\nWinSCP.ini:")
 	if runtime.GOOS == "windows" {
 		fmt.Println("  Usage winscppasswd.exe ini [<filepath>]")
