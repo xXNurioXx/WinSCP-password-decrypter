@@ -13,9 +13,10 @@ import (
 	"github.com/go-ini/ini"
 )
 
+// WinSCP password encryption/decryption salts.
 const (
-	PW_MAGIC = 0xA3
-	PW_FLAG  = 0xFF
+	PasswordMagic = 0xA3
+	PasswordFlag  = 0xFF
 )
 
 func main() {
@@ -86,7 +87,7 @@ func decrypt(host, username, password string) string {
 	var flag byte
 	flag, passbytes = dec_next_char(passbytes)
 	var length byte = 0
-	if flag == PW_FLAG {
+	if flag == PasswordFlag {
 		_, passbytes = dec_next_char(passbytes)
 
 		length, passbytes = dec_next_char(passbytes)
@@ -106,7 +107,7 @@ func decrypt(host, username, password string) string {
 		clearpass += string(val)
 	}
 
-	if flag == PW_FLAG {
+	if flag == PasswordFlag {
 		clearpass = clearpass[len(key):]
 	}
 	return clearpass
@@ -119,5 +120,5 @@ func dec_next_char(passbytes []byte) (byte, []byte) {
 	a := passbytes[0]
 	b := passbytes[1]
 	passbytes = passbytes[2:]
-	return ^(((a << 4) + b) ^ PW_MAGIC) & 0xff, passbytes
+	return ^(((a << 4) + b) ^ PasswordMagic) & PasswordFlag, passbytes
 }
