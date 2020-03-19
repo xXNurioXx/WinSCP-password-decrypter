@@ -24,7 +24,7 @@ func main() {
 	if len(args) != 3 && len(args) != 2 {
 		// In case provided arguments doesn't match the
 		// application usage, print application usage message.
-		printHelp()
+		PrintHelp()
 		return
 	}
 
@@ -35,19 +35,19 @@ func main() {
 		if len(args) == 2 {
 			iniPath = args[1]
 		} else {
-			iniPath = defaultWinSCPIniFilePath()
+			iniPath = GetDefaultWinSCPIniFilePath()
 		}
-		decryptIni(iniPath)
+		DecryptIni(iniPath)
 		return
 	}
 
 	// In case any argument matches a different operation,
 	// perform the default decryption operation.
-	fmt.Println(decrypt(args[0], args[1], args[2]))
+	fmt.Println(Decrypt(args[0], args[1], args[2]))
 }
 
-// Prints a help message with instructions about the application usage.
-func printHelp() {
+// PrintHelp prints a help message with instructions about the application usage.
+func PrintHelp() {
 	fmt.Println("WinSCP stored password finder")
 
 	// WinSCP's password manual decryption mode.
@@ -66,12 +66,12 @@ func printHelp() {
 	} else {
 		fmt.Println("  Usage ./winscppasswd ini [<filepath>]")
 	}
-	fmt.Printf("  Default value <filepath>: %s\n", defaultWinSCPIniFilePath())
+	fmt.Printf("  Default value <filepath>: %s\n", GetDefaultWinSCPIniFilePath())
 	return
 }
 
-// Obtains default WinSCP configuration file.
-func defaultWinSCPIniFilePath() string {
+// GetDefaultWinSCPIniFilePath obtains default WinSCP configuration file.
+func GetDefaultWinSCPIniFilePath() string {
 	usr, err := user.Current()
 	if err != nil {
 		log.Fatal(err)
@@ -79,8 +79,8 @@ func defaultWinSCPIniFilePath() string {
 	return usr.HomeDir + "\\AppData\\Roaming\\winSCP.ini"
 }
 
-// Decrypts all entries from a WinSCP's ini file.
-func decryptIni(filepath string) {
+// DecryptIni decrypts all entries from a WinSCP's ini file.
+func DecryptIni(filepath string) {
 	cfg, err := ini.InsensitiveLoad(filepath)
 	if err != nil {
 		panic(err)
@@ -93,23 +93,24 @@ func decryptIni(filepath string) {
 			fmt.Printf("%s\n", name)
 			fmt.Printf("  Hostname: %s\n", c.Key("HostName").Value())
 			fmt.Printf("  Username: %s\n", c.Key("UserName").Value())
-			fmt.Printf("  Password: %s\n", decrypt(c.Key("HostName").Value(), c.Key("UserName").Value(), c.Key("Password").Value()))
+			fmt.Printf("  Password: %s\n", Decrypt(c.Key("HostName").Value(), c.Key("UserName").Value(), c.Key("Password").Value()))
 			fmt.Println("========================")
 		}
 	}
 
 }
 
-func decrypt(host, username, password string) string {
+// Decrypt decripts a specific server password.
+func Decrypt(host, username, password string) string {
 	// Build 'encryptedPasswordBytes' variable.
-	encryptedPasswordBytes := getCryptedPasswordBytes(password)
+	encryptedPasswordBytes := GetCryptedPasswordBytes(password)
 
 	// Extract 'flag' and 'cryptedPasswordlength' variables
-	flag, encryptedPasswordBytes := decryptNextCharacter(encryptedPasswordBytes) // decryptNextCharacter alters the encryptedPasswordBytes variable to remove already parsed characters.
-	cryptedPasswordlength, encryptedPasswordBytes := getCryptedPasswordLength(flag, encryptedPasswordBytes)
+	flag, encryptedPasswordBytes := DecryptNextCharacter(encryptedPasswordBytes) // decryptNextCharacter alters the encryptedPasswordBytes variable to remove already parsed characters.
+	cryptedPasswordlength, encryptedPasswordBytes := GetCryptedPasswordLength(flag, encryptedPasswordBytes)
 
 	// Build 'clearpass' variable
-	clearpass := getPassword(cryptedPasswordlength, encryptedPasswordBytes)
+	clearpass := GetPassword(cryptedPasswordlength, encryptedPasswordBytes)
 
 	// Apply correction to the 'clearpass' variable.
 	if flag == PasswordFlag {
@@ -121,8 +122,8 @@ func decrypt(host, username, password string) string {
 	return clearpass
 }
 
-// Obtains the crypted password byte array.
-func getCryptedPasswordBytes(password string) []byte {
+// GetCryptedPasswordBytes obtains the crypted password byte array.
+func GetCryptedPasswordBytes(password string) []byte {
 	encryptedPasswordBytes := []byte{}
 	for i := 0; i < len(password); i++ {
 		val, _ := strconv.ParseInt(string(password[i]), 16, 8)
@@ -131,35 +132,35 @@ func getCryptedPasswordBytes(password string) []byte {
 	return encryptedPasswordBytes
 }
 
-// Obtains crypted password length from crypted password byte array.
-func getCryptedPasswordLength(flag byte, encryptedPasswordBytes []byte) (byte, []byte) {
+// GetCryptedPasswordLength obtains crypted password length from crypted password byte array.
+func GetCryptedPasswordLength(flag byte, encryptedPasswordBytes []byte) (byte, []byte) {
 	var cryptedPasswordlength byte = 0
 	if flag == PasswordFlag {
-		_, encryptedPasswordBytes = decryptNextCharacter(encryptedPasswordBytes)                     // Ignore two characters of the encryptedPasswordBytes.
-		cryptedPasswordlength, encryptedPasswordBytes = decryptNextCharacter(encryptedPasswordBytes) // decryptNextCharacter alters the encryptedPasswordBytes variable to remove already parsed characters.
+		_, encryptedPasswordBytes = DecryptNextCharacter(encryptedPasswordBytes)                     // Ignore two characters of the encryptedPasswordBytes.
+		cryptedPasswordlength, encryptedPasswordBytes = DecryptNextCharacter(encryptedPasswordBytes) // decryptNextCharacter alters the encryptedPasswordBytes variable to remove already parsed characters.
 	} else {
 		cryptedPasswordlength = flag
 	}
-	toBeDeleted, encryptedPasswordBytes := decryptNextCharacter(encryptedPasswordBytes) // decryptNextCharacter alters the encryptedPasswordBytes variable to remove already parsed characters.
+	toBeDeleted, encryptedPasswordBytes := DecryptNextCharacter(encryptedPasswordBytes) // decryptNextCharacter alters the encryptedPasswordBytes variable to remove already parsed characters.
 	encryptedPasswordBytes = encryptedPasswordBytes[toBeDeleted*2:]
 	return cryptedPasswordlength, encryptedPasswordBytes
 }
 
-// Obtains clear password from crypted password byte array
-func getPassword(cryptedPasswordlength byte, encryptedPasswordBytes []byte) string {
+// GetPassword obtains clear password from crypted password byte array
+func GetPassword(cryptedPasswordlength byte, encryptedPasswordBytes []byte) string {
 	var i, character byte
 	var decryptedPassword string
 
 	for i = 0; i < cryptedPasswordlength; i++ {
-		character, encryptedPasswordBytes = decryptNextCharacter(encryptedPasswordBytes) // decryptNextCharacter alters the encryptedPasswordBytes variable to remove already parsed characters.
+		character, encryptedPasswordBytes = DecryptNextCharacter(encryptedPasswordBytes) // decryptNextCharacter alters the encryptedPasswordBytes variable to remove already parsed characters.
 		decryptedPassword += string(character)                                           // Add decrypted character to the result variable.
 	}
 	return decryptedPassword
 }
 
-// Decrypts next character from byte array.
+// DecryptNextCharacter decrypts next character from byte array.
 // Alters the byte array to remove already parsed bytes.
-func decryptNextCharacter(encryptedPasswordBytes []byte) (byte, []byte) {
+func DecryptNextCharacter(encryptedPasswordBytes []byte) (byte, []byte) {
 	if len(encryptedPasswordBytes) <= 0 {
 		// In case encryptedPasswordBytes param was empty,
 		// stop the flow here returning '0'.
@@ -169,10 +170,10 @@ func decryptNextCharacter(encryptedPasswordBytes []byte) (byte, []byte) {
 	a := encryptedPasswordBytes[0]                      // Obtain first character to parse.
 	b := encryptedPasswordBytes[1]                      // Obtain second character to parse.
 	encryptedPasswordBytes = encryptedPasswordBytes[2:] // Remove already parsed characters.
-	return decryptCharacter(a, b), encryptedPasswordBytes
+	return DecryptCharacter(a, b), encryptedPasswordBytes
 }
 
-// Decrypts character from two bytes.
-func decryptCharacter(a, b byte) byte {
+// DecryptCharacter decrypts character from two bytes.
+func DecryptCharacter(a, b byte) byte {
 	return ^(((a << 4) + b) ^ PasswordMagic) & PasswordFlag
 }
