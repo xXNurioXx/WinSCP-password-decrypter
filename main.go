@@ -51,23 +51,22 @@ func PrintHelp() {
 	fmt.Println("WinSCP stored password finder")
 
 	// WinSCP's password manual decryption mode.
-	fmt.Println("Registry:")
-	fmt.Println("  Open regedit and navigate to [HKEY_CURRENT_USER\\Software\\Martin Prikryl\\WinSCP 2\\Sessions] to get the hostname, username and encrypted password")
 	if runtime.GOOS == "windows" {
+		fmt.Println("Registry:")
+		fmt.Println("  Open regedit and navigate to [HKEY_CURRENT_USER\\Software\\Martin Prikryl\\WinSCP 2\\Sessions] to get the hostname, username and encrypted password")
 		fmt.Println("  Usage winscppasswd.exe <host> <username> <encrypted_password>")
 	} else {
 		fmt.Println("  Usage ./winscppasswd <host> <username> <encrypted_password>")
 	}
 
 	// WinSCP's ini file mode.
-	fmt.Println("\n\nWinSCP.ini:")
+	fmt.Println("\nWinSCP.ini:")
 	if runtime.GOOS == "windows" {
 		fmt.Println("  Usage winscppasswd.exe ini [<filepath>]")
+		fmt.Printf("  Default value <filepath>: %s\n", GetDefaultWinSCPIniFilePath())
 	} else {
 		fmt.Println("  Usage ./winscppasswd ini [<filepath>]")
 	}
-	fmt.Printf("  Default value <filepath>: %s\n", GetDefaultWinSCPIniFilePath())
-	return
 }
 
 // GetDefaultWinSCPIniFilePath obtains default WinSCP configuration file.
